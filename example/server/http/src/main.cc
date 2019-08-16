@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
     std::scoped_lock lock {io_mutex};
 
     // print http request headers
-    std::cerr << ctx.req.base();
+    std::cerr << ctx.req.base().method_string();
   });
 
   // set http disconnect callback
