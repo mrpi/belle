@@ -1154,12 +1154,12 @@ private:
 
   public:
 
-    Websocket_Base(net::io_context& io_, std::shared_ptr<Attr> const attr_,
+    Websocket_Base(const boost::asio::executor& ex_, std::shared_ptr<Attr> const attr_,
       Request&& req_, fns_on_websocket const& on_websocket_) :
       _attr {attr_},
       _ctx {static_cast<Derived&>(*this), std::move(req_), _attr->channels},
       _on_websocket {on_websocket_},
-      _strand {io_.get_executor()}
+      _strand {ex_}
     {
     }
 
@@ -1401,7 +1401,7 @@ private:
     std::shared_ptr<Attr> const _attr;
     Websocket_Ctx _ctx;
     fns_on_websocket const& _on_websocket;
-    net::strand<net::io_context::executor_type> _strand;
+    net::strand<boost::asio::executor> _strand;
     boost::beast::multi_buffer _buf;
     std::deque<std::shared_ptr<std::string const>> _que {};
   }; // class Websocket_Base
@@ -1414,7 +1414,7 @@ private:
 
     Websocket(tcp::socket&& socket_, std::shared_ptr<Attr> const attr_,
       Request&& req_, fns_on_websocket const& on_websocket_) :
-      Websocket_Base<Websocket> {socket_.get_executor().context(), attr_,
+      Websocket_Base<Websocket> {socket_.get_executor(), attr_,
         std::move(req_), on_websocket_},
       _socket {std::move(socket_)}
     {
@@ -1536,9 +1536,9 @@ private:
 
   public:
 
-    Http_Base(net::io_context& io_, std::shared_ptr<Attr> const attr_) :
-      _strand {io_.get_executor()},
-      _timer {io_, (std::chrono::steady_clock::time_point::max)()},
+    Http_Base(const boost::asio::executor& ex_, std::shared_ptr<Attr> const attr_) :
+      _strand {ex_},
+      _timer {ex_, (std::chrono::steady_clock::time_point::max)()},
       _attr {attr_}
     {
     }
@@ -2003,7 +2003,7 @@ private:
       this->do_read();
     }
 
-    net::strand<net::io_context::executor_type> _strand;
+    net::strand<boost::asio::executor> _strand;
     net::steady_timer _timer;
     boost::beast::flat_buffer _buf;
     std::shared_ptr<Attr> const _attr;
@@ -2019,7 +2019,7 @@ private:
   public:
 
     Http(tcp::socket socket_, std::shared_ptr<Attr> const attr_) :
-      Http_Base<Http, Websocket> {socket_.get_executor().context(), attr_},
+      Http_Base<Http, Websocket> {socket_.get_executor(), attr_},
       _socket {std::move(socket_)}
     {
     }
